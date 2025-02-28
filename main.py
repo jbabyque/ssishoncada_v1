@@ -1,7 +1,7 @@
 import sys
 import logging
 import csv
-from PyQt6.QtWidgets import QMainWindow, QApplication, QLabel, QListWidgetItem, QWidget, QGridLayout, QVBoxLayout, QTableWidget, QTableWidgetItem, QPushButton, QHBoxLayout, QMessageBox, QLineEdit, QComboBox, QHeaderView
+from PyQt6.QtWidgets import QMainWindow, QApplication, QLabel, QListWidgetItem, QWidget, QGridLayout, QVBoxLayout, QTableWidget, QTableWidgetItem, QPushButton, QHBoxLayout, QMessageBox, QLineEdit, QComboBox, QHeaderView, QDialog
 from PyQt6.QtCore import Qt, QSize
 from PyQt6.QtGui import QIcon, QPixmap, QFont
 
@@ -34,7 +34,6 @@ COLLEGE_FIELD_MAP = {
     "College Code": "college_code",
     "College Name": "college_name"
 }
-
 class MainWindow(QMainWindow):
     STUDENT_CSV = 'students.csv'
     PROGRAM_CSV = 'programs.csv'
@@ -333,7 +332,7 @@ class MainWindow(QMainWindow):
         page.setLayout(layout)
 
         return page
-
+    
     def add_student(self):
         dialog = StudentDialog(self)
         if dialog.exec() == StudentDialog.DialogCode.Accepted:
@@ -343,6 +342,7 @@ class MainWindow(QMainWindow):
             for col, header in enumerate(self.STUDENT_HEADERS):
                 field = STUDENT_FIELD_MAP[header]
                 self.student_table.setItem(row_position, col, QTableWidgetItem(student_data[field]))
+            logging.info("Adding student data")
             self.save_data_to_csv(self.STUDENT_CSV, self.student_table, self.STUDENT_HEADERS, STUDENT_FIELD_MAP)
 
     def edit_student(self):
@@ -355,12 +355,14 @@ class MainWindow(QMainWindow):
                 for col, header in enumerate(self.STUDENT_HEADERS):
                     field = STUDENT_FIELD_MAP[header]
                     self.student_table.setItem(selected_row, col, QTableWidgetItem(student_data[field]))
+                logging.info("Editing student data")
                 self.save_data_to_csv(self.STUDENT_CSV, self.student_table, self.STUDENT_HEADERS, STUDENT_FIELD_MAP)
 
     def delete_student(self):
         selected_row = self.student_table.currentRow()
         if selected_row >= 0:
             self.student_table.removeRow(selected_row)
+            logging.info("Deleting student data")
             self.save_data_to_csv(self.STUDENT_CSV, self.student_table, self.STUDENT_HEADERS, STUDENT_FIELD_MAP)
 
     def add_program(self):
@@ -393,33 +395,50 @@ class MainWindow(QMainWindow):
             self.save_data_to_csv(self.PROGRAM_CSV, self.program_table, self.PROGRAM_HEADERS, PROGRAM_FIELD_MAP)
 
     def add_college(self):
-        dialog = CollegeDialog(self)
-        if dialog.exec() == CollegeDialog.DialogCode.Accepted:
-            college_data = dialog.get_college_data()
-            row_position = self.college_table.rowCount()
-            self.college_table.insertRow(row_position)
-            for col, header in enumerate(self.COLLEGE_HEADERS):
-                field = COLLEGE_FIELD_MAP[header]
-                self.college_table.setItem(row_position, col, QTableWidgetItem(college_data[field]))
-            self.save_data_to_csv(self.COLLEGE_CSV, self.college_table, self.COLLEGE_HEADERS, COLLEGE_FIELD_MAP)
-
-    def edit_college(self):
-        selected_row = self.college_table.currentRow()
-        if selected_row >= 0:
-            college_data = {header: self.college_table.item(selected_row, col).text() for col, header in enumerate(self.COLLEGE_HEADERS)}
-            dialog = CollegeDialog(self, college_data)
-            if dialog.exec() == CollegeDialog.DialogCode.Accepted:
+        try:
+            dialog = CollegeDialog(self)
+            if dialog.exec() == QDialog.DialogCode.Accepted:
                 college_data = dialog.get_college_data()
+                if not self.validate_college_data(college_data):
+                    QMessageBox.warning(self, "Invalid Data", "Please fill out all fields.")
+                    return
+                row_position = self.college_table.rowCount()
+                self.college_table.insertRow(row_position)
                 for col, header in enumerate(self.COLLEGE_HEADERS):
                     field = COLLEGE_FIELD_MAP[header]
-                    self.college_table.setItem(selected_row, col, QTableWidgetItem(college_data[field]))
+                    self.college_table.setItem(row_position, col, QTableWidgetItem(college_data[field]))
                 self.save_data_to_csv(self.COLLEGE_CSV, self.college_table, self.COLLEGE_HEADERS, COLLEGE_FIELD_MAP)
+        except Exception as e:
+            logging.error("Error adding college: %s", e)
+            QMessageBox.critical(self, "Error", f"An error occurred while adding the college: {e}")
+
+    def edit_college(self):
+        try:
+            selected_row = self.college_table.currentRow()
+            if selected_row >= 0:
+                college_data = {header: self.college_table.item(selected_row, col).text() for col, header in enumerate(self.COLLEGE_HEADERS)}
+                dialog = CollegeDialog(self, college=college_data)
+                if dialog.exec() == QDialog.DialogCode.Accepted:
+                    college_data = dialog.get_college_data()
+                    if not self.validate_college_data(college_data):
+                        QMessageBox.warning(self, "Invalid Data", "Please fill out all fields.")
+                        return
+                    for col, header in enumerate(self.COLLEGE_HEADERS):
+                        field = COLLEGE_FIELD_MAP[header]
+                        self.college_table.setItem(selected_row, col, QTableWidgetItem(college_data[field]))
+                    self.save_data_to_csv(self.COLLEGE_CSV, self.college_table, self.COLLEGE_HEADERS, COLLEGE_FIELD_MAP)
+        except Exception as e:
+            logging.error("Error editing college: %s", e)
+            QMessageBox.critical(self, "Error", f"An error occurred while editing the college: {e}")
 
     def delete_college(self):
         selected_row = self.college_table.currentRow()
         if selected_row >= 0:
             self.college_table.removeRow(selected_row)
             self.save_data_to_csv(self.COLLEGE_CSV, self.college_table, self.COLLEGE_HEADERS, COLLEGE_FIELD_MAP)
+
+    def validate_college_data(self, college_data):
+        return all(college_data.values())
 
     def button_icon_change(self, status):
         if status:
@@ -439,15 +458,20 @@ class MainWindow(QMainWindow):
                         field = field_map[header]
                         table_widget.setItem(row_position, col, QTableWidgetItem(row[field]))
         except FileNotFoundError:
-            pass  # File not found, no data to load
+            pass  
 
     def save_data_to_csv(self, file_path, table_widget, headers, field_map):
-        with open(file_path, mode='w', newline='') as file:
-            writer = csv.DictWriter(file, fieldnames=field_map.values())
-            writer.writeheader()
-            for row in range(table_widget.rowCount()):
-                row_data = {field_map[header]: table_widget.item(row, col).text() for col, header in enumerate(headers)}
-                writer.writerow(row_data)
+        try:
+            with open(file_path, mode='w', newline='') as file:
+                writer = csv.DictWriter(file, fieldnames=field_map.values())
+                writer.writeheader()
+                for row in range(table_widget.rowCount()):
+                    row_data = {field_map[header]: table_widget.item(row, col).text() for col, header in enumerate(headers)}
+                    writer.writerow(row_data)
+            logging.info(f"Data successfully saved to {file_path}")
+        except Exception as e:
+            logging.error(f"Error saving data to {file_path}: {e}")
+            QMessageBox.critical(self, "Error", f"An error occurred while saving data: {e}")
                 
     def search_student(self):
         search_term = self.student_search_input.text().lower()
@@ -507,4 +531,3 @@ if __name__ == '__main__':
         QMessageBox.critical(None, "Error", f"An error occurred: {e}")
 
     sys.exit(app.exec())
-

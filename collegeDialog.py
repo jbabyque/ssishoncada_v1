@@ -27,8 +27,8 @@ class CollegeDialog(QDialog):
         self.cancel_button.clicked.connect(self.reject)
 
         if college:
-            self.college_code.setText(college["college_code"])
-            self.college_name.setText(college["college_name"])
+            self.college_code.setText(college["College Code"])
+            self.college_name.setText(college["College Name"])
 
     def get_college_data(self):
         return {

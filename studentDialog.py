@@ -1,7 +1,7 @@
-from PyQt6.QtWidgets import QDialog, QVBoxLayout, QLabel, QLineEdit, QPushButton, QFormLayout, QHBoxLayout
+from PyQt6.QtWidgets import QDialog, QVBoxLayout, QLabel, QLineEdit, QPushButton, QFormLayout, QHBoxLayout, QComboBox
 
 class StudentDialog(QDialog):
-    def __init__(self, parent=None, student=None):
+    def __init__(self, parent=None, student=None, college_codes=None):
         super().__init__(parent)
         self.setWindowTitle("Add/Edit Student")
         self.layout = QVBoxLayout(self)
@@ -11,10 +11,15 @@ class StudentDialog(QDialog):
         self.last_name = QLineEdit(self)
         self.first_name = QLineEdit(self)
         self.middle_name = QLineEdit(self)
-        self.gender = QLineEdit(self)
-        self.year_level = QLineEdit(self)
-        self.program_code = QLineEdit(self)
-        self.college_code = QLineEdit(self)
+        self.gender = QComboBox(self)
+        self.gender.addItems(["Male", "Female", "Other"])
+        self.year_level = QComboBox(self)
+        self.year_level.addItems(["1", "2", "3", "4", "5"])
+        self.program_code = QComboBox(self)
+        self.program_code.addItems(["CS", "IT", "SE", "CE"])
+        self.college_code = QComboBox(self)
+        if college_codes:
+            self.college_code.addItems(college_codes)
 
         self.form_layout.addRow("ID Number:", self.id_number)
         self.form_layout.addRow("Last Name:", self.last_name)
@@ -43,19 +48,19 @@ class StudentDialog(QDialog):
             self.last_name.setText(student["Last Name"])
             self.first_name.setText(student["First Name"])
             self.middle_name.setText(student["Middle Name"])
-            self.gender.setText(student["Gender"])
-            self.year_level.setText(student["Year Level"])
-            self.program_code.setText(student["Program Code"])
-            self.college_code.setText(student["College Code"])
+            self.gender.setCurrentText(student["Gender"])
+            self.year_level.setCurrentText(student["Year Level"])
+            self.program_code.setCurrentText(student["Program Code"])
+            self.college_code.setCurrentText(student["College Code"])
 
     def get_student_data(self):
         return {
-            "ID Number": self.id_number.text(),
-            "Last Name": self.last_name.text(),
-            "First Name": self.first_name.text(),
-            "Middle Name": self.middle_name.text(),
-            "Gender": self.gender.text(),
-            "Year Level": self.year_level.text(),
-            "Program Code": self.program_code.text(),
-            "College Code": self.college_code.text()
+            "id_number": self.id_number.text(),
+            "last_name": self.last_name.text(),
+            "first_name": self.first_name.text(),
+            "middle_name": self.middle_name.text(),
+            "gender": self.gender.currentText(),
+            "year_level": self.year_level.currentText(),
+            "program_code": self.program_code.currentText(),
+            "college_code": self.college_code.currentText()
         }

@@ -13,7 +13,7 @@ class ProgramDialog(QDialog):
         self.level = QLineEdit(self)
 
         self.form_layout.addRow("Program Code:", self.program_code)
-        self.form_layout.addRow("College/School:", self.college_school)
+        self.form_layout.addRow("College School:", self.college_school)
         self.form_layout.addRow("Program Name:", self.program_name)
         self.form_layout.addRow("Level:", self.level)
 
@@ -31,10 +31,10 @@ class ProgramDialog(QDialog):
         self.cancel_button.clicked.connect(self.reject)
 
         if program:
-            self.program_code.setText(program["program_code"])
-            self.college_school.setText(program["college_school"])
-            self.program_name.setText(program["program_name"])
-            self.level.setText(program["level"])
+            self.program_code.setText(program["Program Code"])
+            self.college_school.setText(program["College School"])
+            self.program_name.setText(program["Program Name"])
+            self.level.setText(program["Level"])
 
     def get_program_data(self):
         return {
@@ -43,3 +43,4 @@ class ProgramDialog(QDialog):
             "program_name": self.program_name.text(),
             "level": self.level.text()
         }
+
