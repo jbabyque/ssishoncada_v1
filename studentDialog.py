@@ -15,8 +15,7 @@ class StudentDialog(QDialog):
         self.gender.addItems(["Male", "Female", "Other"])
         self.year_level = QComboBox(self)
         self.year_level.addItems(["1", "2", "3", "4", "5"])
-        self.program_code = QComboBox(self)
-        self.program_code.addItems(["CS", "IT", "SE", "CE"])
+        self.program_code = QLineEdit(self)
         self.college_code = QComboBox(self)
         if college_codes:
             self.college_code.addItems(college_codes)
