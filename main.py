@@ -348,7 +348,7 @@ class MainWindow(QMainWindow):
     def edit_student(self):
         selected_row = self.student_table.currentRow()
         if selected_row >= 0:
-            student_data = {header: self.student_table.item(selected_row, col).text() for col, header in enumerate(self.STUDENT_HEADERS)}
+            student_data = {STUDENT_FIELD_MAP[header]: self.student_table.item(selected_row, col).text() for col, header in enumerate(self.STUDENT_HEADERS)}
             dialog = StudentDialog(self, student_data)
             if dialog.exec() == StudentDialog.DialogCode.Accepted:
                 student_data = dialog.get_student_data()
